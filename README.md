@@ -18,7 +18,7 @@ USER INTERFACE:
 
 NOTES:
   1)	The tool only supports UNICODE OST/PST
-  2)	The conversion process can take a few minutes (depending on the nr of emails)
+  2)	The conversion process can take a few minutes (depending on the email's nr/size)
   3)	This tool converts the OST data to PST, it does not provide emails previews/exports
       -	For that you may check https://github.com/Dijji/XstReader (I’ve learned a lot about OST/PST files from this tool)
   4)	OST files are usually located on C:\Users\<username>\AppData\Local\Microsoft\Outlook
@@ -27,7 +27,7 @@ NOTES:
       -	The tool should only report: “Only minor inconsistencies were found in he this file. Repairing the file is optional…”
       -	Please let me know if you get any error…. I will need the OST file to debug it.
       -	SCANPST is usually found within the Microsoft Office installation directory
-6)	Please feel free to contact for in case you face any issues. I’ll try to respond as quickly as possible
+6)	Please feel free to contact me in case you face any issues. I’ll try to respond as quickly as possible
 7)	I would be glad to assist anyone wishing to improve the tool
 8)	Please let me know if you liked it and wishes to “buy me a coffee” 😊
 
