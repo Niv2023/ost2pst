@@ -6,8 +6,10 @@ namespace ost2pst
 {
     public partial class ost2pst : Form
     {
-        private const string version = "1.0.1 (Nov-2025)"; // Version of the application
+        private const string version = "1.0.2 (Mar-2026)"; // Version of the application
         /*
+         * v1.0.2 (Mar-2026)
+         * - improved error handling in RebuildMessageObject: exceptions will now be logged to the output and the affected item will be skipped
          * v1.0.1 (Nov-2025)
          * - fixed issue looping on the function: ost2pst.FM.MarkSubfoldersToExport
          *      - folder tree will check on folder's NID value (instead of name) to avoid looping on duplicate folder names
@@ -20,7 +22,7 @@ namespace ost2pst
         public ost2pst()
         {
             InitializeComponent();
-            Text = $"OST to PTS v={version}"; // Set the form title with the version
+            Text = $"OST to PST v={version}"; // Set the form title with the version
             openOST.Enabled = true; // Enable the button to open OST/PST files
             exportPST.Enabled = false; // Disable the export button until a folder is selected
         }

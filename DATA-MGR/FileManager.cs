@@ -62,79 +62,86 @@ namespace ost2pst
         public static void RebuildMessageObject(NBTENTRY nbt)
         {   // MS_PST 2.4.5	Message Objects
             List<SLENTRY> newSubnodes = new();
-            List<SLENTRY> msgSubnodes = FM.srcFile.GetSLentries(nbt.bidSub);
-            foreach (SLENTRY sn in msgSubnodes)
-            {
-                SLENTRY newSn = new SLENTRY()
+            try {
+                List<SLENTRY> msgSubnodes = FM.srcFile.GetSLentries(nbt.bidSub);
+                foreach (SLENTRY sn in msgSubnodes)
                 {
-                    nid = sn.nid,
-                    bidSub = 0
-                };
-                UpdateSubnodeNIDheaderIndex((UInt32)sn.nid);
-                switch (NID.Type(sn.nid))
-                {
-                    case EnidType.RECIPIENT_TABLE:          // mandatory
-                        newSn = RebuildMessageRecipientTC(sn);
-                        break;
-                    case EnidType.ATTACHMENT_TABLE:         // optional
-                        newSn = RebuildMessageRecipientTC(sn);
-                        break;
-                    case (EnidType)0x16:  // undoc nid that is present in msg objects it is a TC
-                        newSn = RebuildMessageRecipientTCrefreshIndex(sn);
-                        break;
-                    case EnidType.ATTACHMENT:               // optional
-                        List<Property> props = LTP.ReadSubnodePC(srcFile.stream, sn);
-                        int attObjectIx = props.FindIndex(p => p.id == EpropertyId.PidTagAttachDataBinary & p.type == EpropertyType.PtypObject);
-                        if (attObjectIx >= 0)
-                        {   // attachment is a message object see MS_PST:
-                            // 2.3.3.5	PtypObject Properties
-                            // 2.4.6.2.2	Attachment Data
-                            UInt32 objNid = ExtractTypeFromArray<UInt32>(props[attObjectIx].data);
-                            UInt32 objSize = ExtractTypeFromArray<UInt32>(props[attObjectIx].data, 4);
-                            if ((EnidType)(objNid & 0x1f) == EnidType.NORMAL_MESSAGE)
-                            {
-                                List<SLENTRY> subnodes = FM.srcFile.GetSLentries(sn.bidSub);
-                                int msgSnIx = subnodes.FindIndex(s => s.nid == objNid);
-                                if (msgSnIx < 0) throw new Exception($"Attachment msg obj {objNid} subnode not found");
-                                SLENTRY msgSL = subnodes[msgSnIx];
-                                NBTENTRY msgNBT = new NBTENTRY()
+                    SLENTRY newSn = new SLENTRY()
+                    {
+                        nid = sn.nid,
+                        bidSub = 0
+                    };
+                    UpdateSubnodeNIDheaderIndex((UInt32)sn.nid);
+                    switch (NID.Type(sn.nid))
+                    {
+                        case EnidType.RECIPIENT_TABLE:          // mandatory
+                            newSn = RebuildMessageRecipientTC(sn);
+                            break;
+                        case EnidType.ATTACHMENT_TABLE:         // optional
+                            newSn = RebuildMessageRecipientTC(sn);
+                            break;
+                        case (EnidType)0x16:  // undoc nid that is present in msg objects it is a TC
+                            newSn = RebuildMessageRecipientTCrefreshIndex(sn);
+                            break;
+                        case EnidType.ATTACHMENT:               // optional
+                            List<Property> props = LTP.ReadSubnodePC(srcFile.stream, sn);
+                            int attObjectIx = props.FindIndex(p => p.id == EpropertyId.PidTagAttachDataBinary & p.type == EpropertyType.PtypObject);
+                            if (attObjectIx >= 0)
+                            {   // attachment is a message object see MS_PST:
+                                // 2.3.3.5	PtypObject Properties
+                                // 2.4.6.2.2	Attachment Data
+                                UInt32 objNid = ExtractTypeFromArray<UInt32>(props[attObjectIx].data);
+                                UInt32 objSize = ExtractTypeFromArray<UInt32>(props[attObjectIx].data, 4);
+                                if ((EnidType)(objNid & 0x1f) == EnidType.NORMAL_MESSAGE)
                                 {
-                                    nid = new NID(objNid),
-                                    bidData = msgSL.bidData,
-                                    bidSub = msgSL.bidSub,
-                                    nidParent = 0,
-                                };
-                                UpdateSubnodeNIDheaderIndex(msgNBT.nid.dwValue);
-                                NBTENTRY newNbt = RebuildAttachedMessageObject(msgNBT);
-                                msgSL.bidData = newNbt.bidData;
-                                msgSL.bidSub = newNbt.bidSub;
-                                newSn = RebuildAttachmnetPC(objNid, props, subnodes, msgSL);
-                                newSn.nid = sn.nid;
+                                    List<SLENTRY> subnodes = FM.srcFile.GetSLentries(sn.bidSub);
+                                    int msgSnIx = subnodes.FindIndex(s => s.nid == objNid);
+                                    if (msgSnIx < 0) throw new Exception($"Attachment msg obj {objNid} subnode not found");
+                                    SLENTRY msgSL = subnodes[msgSnIx];
+                                    NBTENTRY msgNBT = new NBTENTRY()
+                                    {
+                                        nid = new NID(objNid),
+                                        bidData = msgSL.bidData,
+                                        bidSub = msgSL.bidSub,
+                                        nidParent = 0,
+                                    };
+                                    UpdateSubnodeNIDheaderIndex(msgNBT.nid.dwValue);
+                                    NBTENTRY newNbt = RebuildAttachedMessageObject(msgNBT);
+                                    msgSL.bidData = newNbt.bidData;
+                                    msgSL.bidSub = newNbt.bidSub;
+                                    newSn = RebuildAttachmnetPC(objNid, props, subnodes, msgSL);
+                                    newSn.nid = sn.nid;
+                                }
+                                else
+                                {
+                                    newSn = RebuildAttachmnetPC(sn);
+                                }
                             }
                             else
                             {
                                 newSn = RebuildAttachmnetPC(sn);
                             }
-                        }
-                        else
-                        {
-                            newSn = RebuildAttachmnetPC(sn);
-                        }
-                        break;
-                    case EnidType.LTP:
-                        newSn = Blocks.CopySLentry(sn);
-                        break;
-                    default:
+                            break;
+                        case EnidType.LTP:
+                            newSn = Blocks.CopySLentry(sn);
+                            break;
+                        default:
 
-                        /* MS_PST 2.4.5	Message Objects 
-                         * other nid type not specified
-                         */
-                        throw new Exception($"Message ({nbt.nid.dwValue}) with an invalid subnode nid type {sn.nid}");
+                            /* MS_PST 2.4.5	Message Objects
+                             * other nid type not specified
+                             */
+                            throw new Exception($"Message ({nbt.nid.dwValue}) with an invalid subnode nid type {sn.nid}");
+                    }
+                    newSubnodes.Add(newSn);
                 }
-                newSubnodes.Add(newSn);
+                BREF snBref = Blocks.AddSLentries(newSubnodes);
+                RebuildMessagePC(nbt, snBref.bid);
             }
-            BREF snBref = Blocks.AddSLentries(newSubnodes);
-            RebuildMessagePC(nbt, snBref.bid);
+            catch (Exception ex) {
+                Program.mainForm.statusMSG(ex.Message);
+                Program.mainForm.statusMSG("");
+            }
+
         }
         public static NBTENTRY RebuildAttachedMessageObject(NBTENTRY nbt)
         {   // MS_PST 2.4.5	Message Objects
@@ -444,7 +451,7 @@ namespace ost2pst
                 outFile.AddNDB(nbt, tcHNblocks, subnode);
             }
             else
-            {  // 
+            {  //
                 outFile.CopyNDB(nbt);
             }
         }
@@ -624,7 +631,7 @@ namespace ost2pst
             // scanpst expects that rgnid[3] = rgnid[19] when a CONTENTS_TABLE_INDEX is present
             // outloolk seems to not care about this... so we fix it here just for scanpst compatibility
             if (nbt.nid.nidType == EnidType.CONTENTS_TABLE_INDEX)
-            {   // fix 
+            {   // fix
                 unsafe
                 {
                     outFile.header.rgnid[3] = outFile.header.rgnid[19];  // strange error in scanpst
@@ -819,7 +826,7 @@ namespace ost2pst
         {   // SCANSPT seems to check the highmarks of specific subnode nid types
             // this does not comply with MS-PST documentation (2.6.1.2.2 Creating or Adding a Subnode Entry):
             // ... NIDs for subnodes are internal and therefore NOT allocated from the rgnid[nidType] counter in the HEADER.
-            // 
+            //
             // this code is just avoid erros flagged by SCANPST
             int nidType = (int)nid % 32;
             switch (nidType)
@@ -856,7 +863,7 @@ namespace ost2pst
             return fileSummary(outFile);
         }
         public static UInt32 NextUniqueID()
-        {   // outlook seems to use this value for 
+        {   // outlook seems to use this value for
             // PidTagLtpRowVer property on table context on outlook
             // this is not documented
             UInt32 nextValue = outFile.header.dwUnique;                     //// TO BE CONFIRMED
@@ -915,7 +922,7 @@ namespace ost2pst
             return PST.ComputeCRC(array, dataBytes);
         }
 
-        // 
+        //
         // extracts given data type from a byte array
         public static unsafe T ExtractTypeFromArray<T>(byte[] array, int offset = 0)
         {
@@ -1000,7 +1007,7 @@ namespace ost2pst
         public unsafe static void TypeToBuffer<T>(byte* buffer, int buflen, T typeData, int offset = 0)  /// Nivaldo
         {
             int size = Marshal.SizeOf(typeof(T));
-            { // it just copy the nr of bytes in buffer 
+            { // it just copy the nr of bytes in buffer
                 size = buflen - offset;
             }
             Marshal.StructureToPtr(typeData, new IntPtr(buffer + offset), true);
