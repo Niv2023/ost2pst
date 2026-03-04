@@ -5,6 +5,22 @@ This open-source application can be used for:
   1)	Exporting selected OST email folder tree into a PST file.
   2)	Compacting a PST file with the option to reset its password
 
+🚀 Quick Start
+To run this application from the source code, follow these steps:
+
+    1. Prerequisites
+       - Install the .NET 8.0 SDK (or later) from dotnet.microsoft.com.
+       - Ensure you have Git installed to clone the repository.
+
+    2. Setup & Run
+       - Open your terminal or command prompt and execute the following:
+         #  Clone the repository
+         git clone https://github.com/Niv2023/ost2pst.git
+         # Navigate to the project folder
+         cd ost2pst
+         # Build and run the application
+         dotnet run
+
 USER INTERFACE:
   1)	Click in the <Select OST (or PST)> File button
       -	The open file dialog box defaults to “*.ost”… you can change the filetype to *.pst

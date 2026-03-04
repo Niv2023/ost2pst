@@ -6,8 +6,12 @@ namespace ost2pst
 {
     public partial class ost2pst : Form
     {
-        private const string version = "1.0.2 (Mar-2026)"; // Version of the application
+        private const string version = "1.0.3 (Mar-2026)"; // Version of the application
         /*
+         * v1.0.3 (Mar-2026)
+         * - github issue #4: Multiple exports not possible
+         *      solved by reopening the source file after each export to refresh the folder treeview
+         *      and reset the internal state of the application
          * v1.0.2 (Mar-2026)
          * - improved error handling in RebuildMessageObject: exceptions will now be logged to the output and the affected item will be skipped
          * v1.0.1 (Nov-2025)
@@ -18,7 +22,11 @@ namespace ost2pst
          */
         //private string folderToExport = string.Empty;
         private UInt32 folderToExport = 0;    // NID of the folder to export 
-        private bool treeViewEnabled = false; // Flag to check if the tree view is enabled  
+        private bool treeViewEnabled = false; // Flag to check if the tree view is enabled 
+        private string srcFile; // srcFile will be used to reopen the source file after exporting the pst,
+                                // this is needed because for ost files we need 2 runs for the conversion
+                                // and the source file will be closed after the 1st run
+
         public ost2pst()
         {
             InitializeComponent();
@@ -106,7 +114,7 @@ namespace ost2pst
                     openFileDialog.Title = "Open OST/PST File";
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        string srcFile = openFileDialog.FileName;
+                        srcFile = openFileDialog.FileName;
                         statusMSG($"reading file data");
                         if (FM.OpenSourceFile(srcFile))
                         {
@@ -189,7 +197,11 @@ namespace ost2pst
             finally
             {
                 openOST.Enabled = true; // Enable the button to open OST/PST files
-                treeViewEnabled = false; // treeview will be enabled after loading a new pst/ost file
+                statusMSG($"re-open ost/pst to allow new export");
+                FM.OpenSourceFile(srcFile);  // reopen the source file to refresh the folder treeview
+                                             // (this is needed for OST files after the 1st run conversion)
+                exportPST.Enabled = true; // enable it again
+                treeViewEnabled = true; // treeview will be enabled after loading a new pst/ost file
             }
         }
     }
