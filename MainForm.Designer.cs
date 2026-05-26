@@ -44,7 +44,7 @@ namespace ost2pst
             // 
             // folderView
             // 
-            folderView.Location = new Point(41, 189);
+            folderView.Location = new Point(41, 229);
             folderView.Name = "folderView";
             folderView.Size = new Size(255, 358);
             folderView.TabIndex = 0;
@@ -68,7 +68,7 @@ namespace ost2pst
             // 
             fileDetails.AutoSize = true;
             fileDetails.Font = new Font("Courier New", 9F);
-            fileDetails.Location = new Point(41, 58);
+            fileDetails.Location = new Point(41, 51);
             fileDetails.Name = "fileDetails";
             fileDetails.Size = new Size(133, 15);
             fileDetails.TabIndex = 2;
@@ -80,7 +80,7 @@ namespace ost2pst
             exportPST.FlatAppearance.BorderColor = SystemColors.ActiveBorder;
             exportPST.FlatAppearance.BorderSize = 4;
             exportPST.FlatStyle = FlatStyle.Popup;
-            exportPST.Location = new Point(39, 601);
+            exportPST.Location = new Point(39, 641);
             exportPST.Name = "exportPST";
             exportPST.Size = new Size(256, 30);
             exportPST.TabIndex = 3;
@@ -92,7 +92,7 @@ namespace ost2pst
             // 
             pstDetails.AutoSize = true;
             pstDetails.Font = new Font("Courier New", 9F);
-            pstDetails.Location = new Point(40, 634);
+            pstDetails.Location = new Point(40, 674);
             pstDetails.Name = "pstDetails";
             pstDetails.Size = new Size(140, 15);
             pstDetails.TabIndex = 2;
@@ -103,7 +103,7 @@ namespace ost2pst
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             label1.ForeColor = SystemColors.ActiveCaptionText;
-            label1.Location = new Point(41, 171);
+            label1.Location = new Point(41, 211);
             label1.Name = "label1";
             label1.Size = new Size(100, 15);
             label1.TabIndex = 5;
@@ -117,13 +117,13 @@ namespace ost2pst
             statusList.ItemHeight = 15;
             statusList.Location = new Point(327, 12);
             statusList.Name = "statusList";
-            statusList.Size = new Size(442, 784);
+            statusList.Size = new Size(442, 829);
             statusList.TabIndex = 5;
             // 
             // pstGroup
             // 
             pstGroup.Controls.Add(xbRemovePassword);
-            pstGroup.Location = new Point(43, 547);
+            pstGroup.Location = new Point(43, 596);
             pstGroup.Name = "pstGroup";
             pstGroup.Size = new Size(253, 48);
             pstGroup.TabIndex = 6;
@@ -133,7 +133,7 @@ namespace ost2pst
             // xbRemovePassword
             // 
             xbRemovePassword.AutoSize = true;
-            xbRemovePassword.Location = new Point(6, 22);
+            xbRemovePassword.Location = new Point(6, 23);
             xbRemovePassword.Name = "xbRemovePassword";
             xbRemovePassword.Size = new Size(104, 19);
             xbRemovePassword.TabIndex = 1;
@@ -145,7 +145,7 @@ namespace ost2pst
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Info;
-            ClientSize = new Size(820, 817);
+            ClientSize = new Size(820, 861);
             Controls.Add(pstGroup);
             Controls.Add(statusList);
             Controls.Add(label1);

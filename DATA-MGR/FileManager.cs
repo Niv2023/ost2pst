@@ -10,7 +10,7 @@ namespace ost2pst
         public int level;
         public Folder parent;
         public string name;
-        public string path;
+        //  public string path;
         public NID nid;
         public bool toBeExported;
         public List<Property> properties;
@@ -62,7 +62,8 @@ namespace ost2pst
         public static void RebuildMessageObject(NBTENTRY nbt)
         {   // MS_PST 2.4.5	Message Objects
             List<SLENTRY> newSubnodes = new();
-            try {
+            try
+            {
                 List<SLENTRY> msgSubnodes = FM.srcFile.GetSLentries(nbt.bidSub);
                 foreach (SLENTRY sn in msgSubnodes)
                 {
@@ -137,7 +138,8 @@ namespace ost2pst
                 BREF snBref = Blocks.AddSLentries(newSubnodes);
                 RebuildMessagePC(nbt, snBref.bid);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Program.mainForm.statusMSG(ex.Message);
                 Program.mainForm.statusMSG("");
             }
@@ -684,7 +686,7 @@ namespace ost2pst
                     Folder folder = new Folder()
                     {
                         name = "",
-                        path = @"\",
+                        //path = @"\",
                         level = 0,
                         nid = nbt.nid,
                         toBeExported = false,
@@ -696,28 +698,50 @@ namespace ost2pst
                 }
                 else
                 {
-                    if (nbt.nid.nidType == EnidType.NORMAL_FOLDER | nbt.nid.nidType == EnidType.SEARCH_FOLDER)
-                    {
-                        Folder folder = new Folder()
+                    if (srcFile.type == FileType.OST & nbt.nid.dwValue == (uint)EnidSpecial.NID_DELETED_MESSAGES_FOLDER)
+                    {   // 32866 is a NID assigned to deleted items folder in the PST 
+                        // therefore we cannot selected it to export
+                        // in this temp fix we remove it from the folder list.
+                        // - in a exchage ost this NID seems to be assigned to a folder 'Files' but without 
+                        //   any files and subfolders... I cannot find any documentation on how MS exchange deals with it.
+                        // - in a GMAIL ost this NID is assigned to the [Gmail] folder
+                        //   this folder does not contain any file but few relevant folders (Sent, Trash and Spam)
+                        //   with this patch these folders will be moved to the rooot folder.
+                        //   
+                        // The proper fix should be to assign a new NID to any folder reserved for PST (inc. 32866)
+                        // 
+                        Program.mainForm.statusMSG($"removing folder '{ReadFolderName(nbt)}' from list (NID=32866)");
+                    }
+                    else {
+                        if (nbt.nid.nidType == EnidType.NORMAL_FOLDER | nbt.nid.nidType == EnidType.SEARCH_FOLDER)
                         {
-                            nbtIndex = i,
-                            name = ReadFolderName(nbt),
-                            parent = parentFolder(nbt),
-                            nid = nbt.nid,
-                            toBeExported = false,
-                        };
-                        if (folder.name == "IPM_SUBTREE")
-                        {
-                            folder.path = "";
+                            Folder folder = new Folder()
+                            {
+                                nbtIndex = i,
+                                name = ReadFolderName(nbt),
+                                nid = nbt.nid,
+                                toBeExported = false,
+                            };
+                            if (srcFile.type == FileType.OST & nbt.nidParent == (uint)EnidSpecial.NID_DELETED_MESSAGES_FOLDER)
+                            {
+                                folder.parent = parentFolder((uint)EnidSpecial.NID_ROOT_FOLDER);
+                                Program.mainForm.statusMSG($"moving folder '{folder.name}' to ROOT FOLDER");
+                            }
+                            else
+                            {
+                                folder.parent = parentFolder(nbt);
+                            }
+                            folders.Add(folder);
                         }
-                        else
-                        {
-                            folder.path = folder.parent.path + @"\" + folder.name;
-                        }
-                        folders.Add(folder);
                     }
                 }
             }
+        }
+        private static Folder parentFolder(uint nid)
+        {
+            int folderIx = folders.FindIndex(f => f.nid.dwValue == nid);
+            if (folderIx < 0) throw new Exception($"Parent folder NID {nid} not found");
+            return folders[folderIx];
         }
         private static Folder parentFolder(NBTENTRY nbt)
         {

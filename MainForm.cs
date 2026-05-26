@@ -6,8 +6,15 @@ namespace ost2pst
 {
     public partial class ost2pst : Form
     {
-        private const string version = "1.0.3 (Mar-2026)"; // Version of the application
+        private const string version = "1.0.4 (May-2026)"; // Version of the application
         /*
+         * v1.0.4 (May-2026)
+         * - Patch to support GMAIL IMAP ost files in outlook (github issue #6)
+         *      this is quick fix to support the export of GMAIL IMAP ost files in outlook.
+         *      it moves the [GMail] subfolders to the root folder
+         *      
+         *      a proper fix needs to be implemented later
+         *      
          * v1.0.3 (Mar-2026)
          * - github issue #4: Multiple exports not possible
          *      solved by reopening the source file after each export to refresh the folder treeview

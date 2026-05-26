@@ -13,7 +13,6 @@
             ApplicationConfiguration.Initialize();
             mainForm = new ost2pst();
             Application.Run(mainForm);
-          //            Application.Run(new ost2pst());
         }
         public static ost2pst mainForm;
     }

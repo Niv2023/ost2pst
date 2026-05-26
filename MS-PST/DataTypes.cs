@@ -159,6 +159,7 @@ namespace ost2pst
         NID_SEARCH_CONTENTS_TABLE_TEMPLATE = 0x0610,
         NID_RECIPIENT_TABLE = 0x0692,
         NID_ATTACHMENT_TABLE = 0x0671,
+        NID_DELETED_MESSAGES_FOLDER = 0x8062,
     }
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct BREF
