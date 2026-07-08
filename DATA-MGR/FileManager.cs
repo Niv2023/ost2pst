@@ -541,23 +541,26 @@ namespace ost2pst
         {
             msgSizes = new();
             List<NBTENTRY> msgNbts = (List<NBTENTRY>)srcFile.NBTs.FindAll(n => n.nid.nidType == EnidType.NORMAL_MESSAGE);
-            Program.mainForm.statusMSG($"Reading pst message sizes");
-            foreach (NBTENTRY nbt in msgNbts)
+            Program.mainForm.statusMSG($"Reading pst message sizes ({msgNbts.Count:N0} messages)");
+            for (int i = 0; i < msgNbts.Count; i++)
             {
+                NBTENTRY nbt = msgNbts[i];
                 msgSizes.Add(new()
                 {
                     nid = nbt.nid.dwValue,
                     size = GetActualMessageSize(nbt)
                 });
+                Program.mainForm.progressUpdate(i + 1, msgNbts.Count, "Calculando tamaños");
             }
         }
         public static void CopyRevisedPSTdata(bool resetPassword)
         {
-            Program.mainForm.statusMSG($"Exporting NBT data");
+            Program.mainForm.statusMSG($"Exporting NBT data ({srcFile.NBTs.Count:N0} entries)");
             for (int i = 0; i < srcFile.NBTs.Count; i++)
             {
                 NBTENTRY nbt = srcFile.NBTs[i];
                 Program.mainForm.statusMSG($"Exporting NBT entry {i + 1} out of {srcFile.NBTs.Count}", false);
+                Program.mainForm.progressUpdate(i + 1, srcFile.NBTs.Count, "Reconstruyendo PST");
                 if (nbt.nid.nidType == EnidType.NORMAL_MESSAGE)
                 {
                     RefreshMessagePC(nbt);
@@ -599,6 +602,7 @@ namespace ost2pst
             {
                 NBTENTRY nbt = srcFile.NBTs[i];
                 Program.mainForm.statusMSG($"Converting OST NBT entry {i + 1} out of {srcFile.NBTs.Count}", false);
+                Program.mainForm.progressUpdate(i + 1, srcFile.NBTs.Count, "Convirtiendo OST");
                 if (ToBeExported(nbt))
                 {
                     if (nbt.nid.nidType == EnidType.NORMAL_MESSAGE)
