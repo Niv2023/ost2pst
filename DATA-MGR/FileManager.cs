@@ -550,7 +550,7 @@ namespace ost2pst
                     nid = nbt.nid.dwValue,
                     size = GetActualMessageSize(nbt)
                 });
-                Program.mainForm.progressUpdate(i + 1, msgNbts.Count, "Calculando tamaños");
+                Program.mainForm.progressUpdate(i + 1, msgNbts.Count, "Calculating sizes");
             }
         }
         public static void CopyRevisedPSTdata(bool resetPassword)
@@ -560,7 +560,7 @@ namespace ost2pst
             {
                 NBTENTRY nbt = srcFile.NBTs[i];
                 Program.mainForm.statusMSG($"Exporting NBT entry {i + 1} out of {srcFile.NBTs.Count}", false);
-                Program.mainForm.progressUpdate(i + 1, srcFile.NBTs.Count, "Reconstruyendo PST");
+                Program.mainForm.progressUpdate(i + 1, srcFile.NBTs.Count, "Rebuilding PST");
                 if (nbt.nid.nidType == EnidType.NORMAL_MESSAGE)
                 {
                     RefreshMessagePC(nbt);
@@ -602,7 +602,7 @@ namespace ost2pst
             {
                 NBTENTRY nbt = srcFile.NBTs[i];
                 Program.mainForm.statusMSG($"Converting OST NBT entry {i + 1} out of {srcFile.NBTs.Count}", false);
-                Program.mainForm.progressUpdate(i + 1, srcFile.NBTs.Count, "Convirtiendo OST");
+                Program.mainForm.progressUpdate(i + 1, srcFile.NBTs.Count, "Converting OST");
                 if (ToBeExported(nbt))
                 {
                     if (nbt.nid.nidType == EnidType.NORMAL_MESSAGE)

@@ -179,7 +179,7 @@ namespace ost2pst
             // Guard: ensure a folder is selected
             if (folderToExport == 0)
             {
-                MessageBox.Show("Por favor selecciona una carpeta en el árbol antes de exportar.", "Sin carpeta seleccionada", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please select a folder in the tree before exporting.", "No folder selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
