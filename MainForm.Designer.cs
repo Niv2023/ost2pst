@@ -39,6 +39,8 @@ namespace ost2pst
             statusList = new ListBox();
             pstGroup = new GroupBox();
             xbRemovePassword = new CheckBox();
+            progressBar = new ProgressBar();
+            progressLabel = new Label();
             pstGroup.SuspendLayout();
             SuspendLayout();
             // 
@@ -117,8 +119,29 @@ namespace ost2pst
             statusList.ItemHeight = 15;
             statusList.Location = new Point(327, 12);
             statusList.Name = "statusList";
-            statusList.Size = new Size(442, 829);
+            statusList.Size = new Size(442, 800);
             statusList.TabIndex = 5;
+            // 
+            // progressLabel
+            // 
+            progressLabel.AutoSize = false;
+            progressLabel.Font = new Font("Courier New", 8F);
+            progressLabel.ForeColor = SystemColors.ControlDarkDark;
+            progressLabel.Location = new Point(327, 816);
+            progressLabel.Name = "progressLabel";
+            progressLabel.Size = new Size(442, 15);
+            progressLabel.TabIndex = 7;
+            progressLabel.Text = "";
+            progressLabel.Visible = false;
+            // 
+            // progressBar
+            // 
+            progressBar.Location = new Point(327, 834);
+            progressBar.Name = "progressBar";
+            progressBar.Size = new Size(442, 18);
+            progressBar.TabIndex = 8;
+            progressBar.Style = ProgressBarStyle.Continuous;
+            progressBar.Visible = false;
             // 
             // pstGroup
             // 
@@ -154,6 +177,8 @@ namespace ost2pst
             Controls.Add(fileDetails);
             Controls.Add(openOST);
             Controls.Add(folderView);
+            Controls.Add(progressLabel);
+            Controls.Add(progressBar);
             Name = "ost2pst";
             Text = "read";
             pstGroup.ResumeLayout(false);
@@ -166,8 +191,6 @@ namespace ost2pst
 
         private TreeView folderView;
         private Button openOST;
-
-
         private Label fileDetails;
         private Button exportPST;
         private Label pstDetails;
@@ -175,5 +198,7 @@ namespace ost2pst
         private ListBox statusList;
         private GroupBox pstGroup;
         private CheckBox xbRemovePassword;
+        private ProgressBar progressBar;
+        private Label progressLabel;
     }
 }

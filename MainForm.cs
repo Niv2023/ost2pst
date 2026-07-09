@@ -43,6 +43,7 @@ namespace ost2pst
         }
         public void statusMSG(string msg, bool newLine = true)
         {
+            if (InvokeRequired) { Invoke(() => statusMSG(msg, newLine)); return; }
             if (newLine)
             {
                 statusList.Items.Add(msg);
@@ -53,6 +54,24 @@ namespace ost2pst
             }
             statusList.SelectedIndex = statusList.Items.Count - 1; // Select the last item
             statusList.Update();
+        }
+
+        public void progressUpdate(int current, int total, string phase)
+        {
+            if (InvokeRequired) { Invoke(() => progressUpdate(current, total, phase)); return; }
+            if (total <= 0) return;
+            int pct = (int)((long)current * 100 / total);
+            progressBar.Value = Math.Min(pct, 100);
+            progressLabel.Text = $"{phase}: {current:N0} de {total:N0}";
+        }
+
+        private void setProgressVisible(bool visible)
+        {
+            if (InvokeRequired) { Invoke(() => setProgressVisible(visible)); return; }
+            progressBar.Value = 0;
+            progressBar.Visible = visible;
+            progressLabel.Text = "";
+            progressLabel.Visible = visible;
         }
 
         private void PopulateTreeView(List<Folder> folders)
@@ -85,6 +104,11 @@ namespace ost2pst
             {   // folder selection is only available for OST files
                 treeViewEnabled = true; // Set the flag to indicate the tree view is populated and enabled
                 folderView.AfterSelect += treeViewFolders_AfterSelect;
+                // Auto-select the root node so folderToExport is never 0
+                if (folderView.Nodes.Count > 0)
+                {
+                    folderView.SelectedNode = folderView.Nodes[0];
+                }
             }
             else
             {
@@ -150,65 +174,85 @@ namespace ost2pst
             }
         }
 
-        private void exportPST_Click(object sender, EventArgs e)
+        private async void exportPST_Click(object sender, EventArgs e)
         {
-            openOST.Enabled = false; // Enable the button to open OST/PST files
-            exportPST.Enabled = false; // Disable the export button while exporting
+            // Guard: ensure a folder is selected
+            if (folderToExport == 0)
+            {
+                MessageBox.Show("Please select a folder in the tree before exporting.", "No folder selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // SaveFileDialog must run on the UI thread
+            string destFile = "";
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "PST files (*.pst)|*.pst|All files (*.*)|*.*";
+                saveFileDialog.Title = "Save PST File";
+                if (saveFileDialog.ShowDialog() != DialogResult.OK) return;
+                destFile = saveFileDialog.FileName;
+            }
+
+            // Capture current selection before going to background
+            UInt32 savedFolderToExport = folderToExport;
+            string savedExportBtnText = exportPST.Text;
+            bool removePassword = xbRemovePassword.Checked;
+
+            openOST.Enabled = false;
+            exportPST.Enabled = false;
+            setProgressVisible(true);
+
+            string pstDetailsText = "";
             try
             {
-                using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+                await Task.Run(() =>
                 {
-                    saveFileDialog.Filter = "PST files (*.pst)|*.pst|All files (*.*)|*.*";
-                    saveFileDialog.Title = "Save PST File";
-                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    string tmpPstFile = Path.GetTempPath() + "tempPST.pst";
+                    if (FM.srcFile.type == FileType.OST)
                     {
-                        string destFile = saveFileDialog.FileName;
-                        string tmpPstFile = Path.GetTempPath() + "tempPST.pst";
-                        if (FM.srcFile.type == FileType.OST)
+                        // for OST files, we need 2 runs for the conversion.
+                        // this is because the message sizes may change due to different block/page sizes of the ost file
+                        statusMSG("Converting OST FILE");
+                        statusMSG("Building temp pst file");
+                        statusMSG("to recalculate the message sizes");
+                        statusMSG("PLEASE WAIT... this may take a few minutes");
+                        if (FM.CreatPstFile(tmpPstFile))
                         {
-                            // for OST files, we need 2 runs for the conversion.
-                            // this is because the message sizes may change due to different block/page sizes of the ost file
-                            // please note the message sizes seems not to be validated by outlook,
-                            // however SCANPST will flag it an repair it
-                            // this 2nd run conversion avoids errors in the SCANPST
-                            statusMSG($"Converting OST FILE");
-                            statusMSG($"Building temp pst file");
-                            statusMSG($"to recalculate the message sizes");
-                            statusMSG($"PLEASE WAIT...this may take few minutes");
-                            if (FM.CreatPstFile(tmpPstFile))
-                            {
-                                FM.CopySourceDatablocksToPST(folderToExport, Path.GetFileName(destFile));
-                                FM.exportNBTnodes();
-                                FM.exportBBTnodes();
-                                FM.updateNidHighWaterMarks();
-                                FM.CloseOutputFile();
-                                FM.CloseSourceFile();
-                                FM.OpenSourceFile(tmpPstFile);
-                            }
-                        }
-                        statusMSG($"building final pst file");
-                        if (FM.CreatPstFile(destFile))
-                        {
-                            FM.rebuildPSTfile(xbRemovePassword.Checked);   // this will rebuild the pst file with the correct message sizes
+                            FM.CopySourceDatablocksToPST(savedFolderToExport, Path.GetFileName(destFile));
                             FM.exportNBTnodes();
                             FM.exportBBTnodes();
                             FM.updateNidHighWaterMarks();
                             FM.CloseOutputFile();
                             FM.CloseSourceFile();
-                            statusMSG($"export completed");
+                            FM.OpenSourceFile(tmpPstFile);
                         }
-                        pstDetails.Text = FM.OutputFileDetails();
                     }
-                }
+                    statusMSG("building final pst file");
+                    if (FM.CreatPstFile(destFile))
+                    {
+                        FM.rebuildPSTfile(removePassword);
+                        FM.exportNBTnodes();
+                        FM.exportBBTnodes();
+                        FM.updateNidHighWaterMarks();
+                        FM.CloseOutputFile();
+                        FM.CloseSourceFile();
+                        statusMSG("export completed");
+                    }
+                    pstDetailsText = FM.OutputFileDetails();
+                });
             }
             finally
             {
-                openOST.Enabled = true; // Enable the button to open OST/PST files
-                statusMSG($"re-open ost/pst to allow new export");
+                setProgressVisible(false);
+                pstDetails.Text = pstDetailsText;
+                statusMSG("re-open ost/pst to allow new export");
                 FM.OpenSourceFile(srcFile);  // reopen the source file to refresh the folder treeview
-                                             // (this is needed for OST files after the 1st run conversion)
-                exportPST.Enabled = true; // enable it again
-                treeViewEnabled = true; // treeview will be enabled after loading a new pst/ost file
+                openOST.Enabled = true;
+                // Restore the folder selection so a 2nd export works without re-selecting
+                folderToExport = savedFolderToExport;
+                exportPST.Text = savedExportBtnText;
+                exportPST.Enabled = (savedFolderToExport != 0);
+                treeViewEnabled = true;
             }
         }
     }
